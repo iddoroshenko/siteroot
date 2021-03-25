@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
 from .models import Product, Review, ReviewComment
-from .forms import LoginForm, RegistrationForm, ReviewForm
+from .forms import LoginForm, RegistrationForm, RatingForm
 
 
 def log_in(request):
@@ -81,55 +81,15 @@ def product(request, product_id):
 
 def render_product(request, product_id, additional_context={}):
     product = get_object_or_404(Product, id=product_id)
-    form = ReviewForm()
+    ratingForm = RatingForm()
     context = {'product': product,
-               'form': form,
+               'ratingForm': ratingForm,
                'reviews': product.review_set.order_by('-created_at'),
                'reviewComments': product.reviewcomment_set.order_by('created_at'),
                **additional_context
                }
 
     return render(request, 'shop/product.html', context)
-
-
-
-def send_review(request, product_id):
-    if request.method == 'POST':
-        form = ReviewForm(request.POST)
-        if form.is_valid():
-            username = request.user.username
-            rating = form.cleaned_data['rating']
-            city = form.cleaned_data['city']
-            textPositive = form.cleaned_data['textPositive']
-            textNegative = form.cleaned_data['textNegative']
-            textSummary = form.cleaned_data['textSummary']
-
-            city_error = None
-            if not city or city.isspace():
-                city_error = 'Please provide city'
-
-            textPositive_error = None
-            if not textPositive or textPositive.isspace():
-                textPositive_error = 'Please provide textPositive'
-
-            textNegative_error = None
-            if not textNegative or textNegative.isspace():
-                textNegative_error = 'Please provide textNegative'
-
-            textSummary_error = None
-            if not textSummary or textSummary.isspace():
-                textSummary_error = 'Please provide textSummary'
-            if textNegative_error or textPositive_error or textSummary_error or city_error:
-                form.add_error('Invalid you!')
-            else:
-                Review(product_id=product_id, textPositive=textPositive,
-                       textNegative=textNegative, textSummary=textSummary, username=username,
-                       city=city, rating=rating, reviewLikes=0, reviewDislikes=0).save()
-
-                return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))
-    else:
-        form = ReviewForm()
-    return render(request, 'shop/send_review.html', {'form': form})
 
 
 @login_required(login_url='/shop/login')
@@ -157,10 +117,11 @@ def create_review(request, product_id):
     textSummary_error = None
     if not textSummary or textSummary.isspace():
         textSummary_error = 'Please provide textSummary'
-    rating = 1
-    form = ReviewForm(request.POST)
-    if form.is_valid():
-        rating = form.cleaned_data['rating']
+
+    ratingForm = RatingForm(request.POST)
+    rating = 0
+    if ratingForm.is_valid():
+        rating = ratingForm.cleaned_data['rating']
 
     if textNegative_error or textPositive_error or textSummary_error or city_error:
         error_context = {

@@ -9,5 +9,4 @@ urlpatterns = [
     path('login', views.log_in, name='login'),
     path('signup', views.sign_up, name='signup'),
     path('logout', views.log_out, name='logout'),
-    path('send_review/<int:product_id>', views.send_review, name='send_review'),
 ]
