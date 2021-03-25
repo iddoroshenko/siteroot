@@ -8,7 +8,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from .models import Product, Review, ReviewComment
+from .models import Product, Review, ReviewComment, ShopCart
 from .forms import LoginForm, RegistrationForm, RatingForm
 
 
@@ -45,6 +45,7 @@ def sign_up(request):
                 form.add_error('password_again', 'Password mismatch!')
             else:
                 user = User.objects.create_user(username, email, password)
+                cart = ShopCart.objects.create(author=user, products=[])
                 login(request, user)
                 return get_products_list(request)
     else:
@@ -59,7 +60,6 @@ def log_out(request):
 
 
 def get_products_list(request):
-
     if request.user.is_authenticated:
         name = request.user.username
     else:
@@ -169,3 +169,11 @@ def create_review_comment(request, review_id):
         ReviewComment(review_id=review.id, product_id=review.product.id, text=text, username=username).save()
         return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': review.product.id}))
 
+
+def addProductToCart(request, product_id):
+    cart = ShopCart.objects.filter(author=request.user)[0]
+
+    if product_id not in cart.products:
+        cart.products.append(product_id)
+        cart.save()
+    return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))

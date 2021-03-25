@@ -38,11 +38,12 @@
 {% else %}
 <h3>Log in if you want to leave a review</h3>
 {% endif %}
-
+<a href="{% url 'addProductToCart' product.id %}">Add product to cart</a>
 <ul>
     {% for review in reviews %}
         <li>
             Username: <b>{{ review.username }}</b><br/>
+            City: <i>{{ review.city }}</i><br/>
             Date: <i>{{ review.created_at }}</i><br/>
             {% if   review.created_at.year != review.updated_at.year or review.created_at.month != review.updated_at.month or review.created_at.day != review.updated_at.day or review.created_at.hour != review.updated_at.hour %}
             Changed: <i>{{ review.updated_at }}</i><br/>

@@ -1,0 +1,14 @@
+{% extends 'shop/base.html' %}
+{% block content %}
+{% if request.user.is_authenticated %}
+<h2>
+    <ul>
+        {% for product in cart %}
+        <li><a href="{% url 'product_by_id' product.id%}">{{ product.title }}</a></li>
+        {% endfor %}
+    </ul>
+</h2>
+{% else %}
+<h3>Log in if you want to see your cart</h3>
+{% endif %}
+{% endblock %}
