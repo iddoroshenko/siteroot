@@ -14,4 +14,13 @@ class RegistrationForm(forms.Form):
 
 
 class ReviewForm(forms.Form):
-    rating = forms.ChoiceField(widget=forms.RadioSelect)
+    rating = forms.ChoiceField(widget=forms.RadioSelect, choices=[
+                                ('1', 'terrible'),
+                                ('2', 'bad'),
+                                ('3', 'average'),
+                                ('4', 'good'),
+                                ('5', 'perfect')])
+    city = forms.CharField(max_length=40)
+    textPositive = forms.CharField(max_length=4096)
+    textNegative = forms.CharField(max_length=4096)
+    textSummary = forms.CharField(max_length=4096)

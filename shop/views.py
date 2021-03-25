@@ -12,6 +12,47 @@ from .models import Product, Review, ReviewComment
 from .forms import LoginForm, RegistrationForm, ReviewForm
 
 
+def send_review(request, product_id):
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            username = request.user.username
+            rating = form.cleaned_data['rating']
+            city = form.cleaned_data['city']
+            textPositive = form.cleaned_data['textPositive']
+            textNegative = form.cleaned_data['textNegative']
+            textSummary = form.cleaned_data['textSummary']
+
+            city_error = None
+            if not city or city.isspace():
+                city_error = 'Please provide city'
+
+            textPositive_error = None
+            if not textPositive or textPositive.isspace():
+                textPositive_error = 'Please provide textPositive'
+
+            textNegative_error = None
+            if not textNegative or textNegative.isspace():
+                textNegative_error = 'Please provide textNegative'
+
+            textSummary_error = None
+            if not textSummary or textSummary.isspace():
+                textSummary_error = 'Please provide textSummary'
+            if textNegative_error or textPositive_error or textSummary_error or city_error:
+                form.add_error('Invalid you!')
+            else:
+                Review(product_id=product_id, textPositive=textPositive,
+                       textNegative=textNegative, textSummary=textSummary, username=username,
+                       city=city, rating=rating, reviewLikes=0, reviewDislikes=0).save()
+                redirect_url = request.GET.get('next') or reverse('shop_index')
+                #return redirect(redirect_url)
+
+                return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))
+    else:
+        form = ReviewForm()
+    return render(request, 'shop/send_review.html', {'form': form})
+
+
 def log_in(request):
     if request.method == 'POST':
         logout(request)
@@ -115,8 +156,7 @@ def create_review(request, product_id):
     textSummary_error = None
     if not textSummary or textSummary.isspace():
         textSummary_error = 'Please provide textSummary'
-    #form = Rating(request.POST)
-    #rating = form.cleaned_data['rating']
+
     rating = 3
     if textNegative_error or textPositive_error or textSummary_error or city_error:
         error_context = {
