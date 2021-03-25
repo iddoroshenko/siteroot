@@ -1,0 +1,82 @@
+{% extends 'shop/base.html' %}
+{% block title%}{{ blog.title }}{% endblock %}}
+{% block content %}
+<h2>
+    It is &quot;{{ product.title }}&quot;
+</h2>
+<p>Description: {{ product.description }}</p>
+<p>Price: {{ product.price }}</p>
+{% if request.user.is_authenticated %}
+<form action="{% url 'product_by_id' product.id %}" method="POST">
+    {% csrf_token %}
+    <input type="text" name="city" maxlength="40" size="40" placeholder="enter your city" value="{{ city }}"/>
+    <br/>
+    {% if city_error %}
+    <p style="color:#ff0000;"> {{ city_error }}</p>
+    {% endif %}
+    <textarea name="textPositive" maxlength="4096" rows="10" cols="80" placeholder="textPositive here">{{ textPositive }}</textarea>
+    <br/>
+    {% if textPositive_error %}
+    <p style="color:#ff0000;"> {{ textPositive_error }}</p>
+    {% endif %}
+    <textarea name="textNegative" maxlength="4096" rows="10" cols="80" placeholder="textNegative here">{{ textNegative }}</textarea>
+    <br/>
+    {% if textNegative_error %}
+    <p style="color:#ff0000;"> {{ textNegative_error }}</p>
+    {% endif %}
+    <textarea name="textSummary" maxlength="4096" rows="10" cols="80" placeholder="textSummary here">{{ textSummary }}</textarea>
+    <br/>
+    {% if textSummary_error %}
+    <p style="color:#ff0000;"> {{ textSummary_error }}</p>
+    {% endif %}
+    <!--<form method="POST">
+        {% csrf_token %}
+        <table>{{ form }}</table>
+    </form>//-->
+    <input type="submit" value="send review" />
+</form>
+{% else %}
+<h3>Log in if you want to leave a review</h3>
+{% endif %}
+<ul>
+    {% for review in reviews %}
+        <li>
+            Username: <b>{{ review.username }}</b><br/>
+            Date: <i>{{ review.created_at }}</i><br/>
+            {% if   review.created_at.year != review.updated_at.year or review.created_at.month != review.updated_at.month or review.created_at.day != review.updated_at.day or review.created_at.hour != review.updated_at.hour %}
+            Changed: <i>{{ review.updated_at }}</i><br/>
+            {% endif %}
+            Positive: <p>{{ review.textPositive }}</p><br/>
+            Negative: <p>{{ review.textNegative }}</p><br/>
+            Summary: <p>{{ review.textSummary }}</p><br/>
+            Score: <b>{{ review.rating }}</b><br/>
+            Review likes: <b>{{ review.reviewLikes }}</b><br/>
+            Review dislikes: <b>{{ review.reviewDislikes }}</b>
+            <ul>
+                {% for comment in reviewComments %}
+                {% if comment.review.id == review.id %}
+                <li>
+                    Username: <b>{{ comment.username }}</b><br/>
+                    Comment: <p>{{ comment.text }}</p>
+                </li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+
+            {% if request.user.is_authenticated %}
+            <form action="{% url 'reviewComment' review.id %}" method="POST">
+                {% csrf_token %}
+                <textarea name="text" maxlength="4096" rows="3" cols="40" placeholder="text here">{{ text }}</textarea>
+                <br/>
+                {% if text_error %}
+                <p style="color:#ff0000;"> {{ text_error }}</p>
+                {% endif %}
+                <input type="submit" value="send comment" />
+            </form>
+            {% else %}
+            <h4>Log in if you want to leave a comment to review</h4>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}
