@@ -29,17 +29,16 @@
     {% if textSummary_error %}
     <p style="color:#ff0000;"> {{ textSummary_error }}</p>
     {% endif %}
-    <input type="submit" value="send review" />
-</form>
-{% else %}
-<h3>Log in if you want to leave a review</h3>
-{% endif %}
-<!--<a href="{% url 'send_review' product.id %}">Send Review</a>//-->
-<form method="POST">
+    <form method="POST">
     {% csrf_token %}
     <table>{{ form }}</table>
     <input type="submit" value="send review"/>
 </form>
+</form>
+{% else %}
+<h3>Log in if you want to leave a review</h3>
+{% endif %}
+
 <ul>
     {% for review in reviews %}
         <li>
