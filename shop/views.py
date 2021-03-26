@@ -72,6 +72,26 @@ def get_products_list(request):
     return render(request, 'shop/index.html', context)
 
 
+def get_cart_list(request):
+    if request.user.is_authenticated:
+        name = request.user.username
+    else:
+        name = "stranger"
+
+    cart = ShopCart.objects.filter(author=request.user)[0]
+
+    products = Product.objects.order_by('title')
+    productsInCart = []
+    for product in products:
+        if product.id in cart.products:
+            productsInCart.append(product)
+
+    context = {'products': productsInCart,
+               'username': name,
+               }
+    return render(request, 'shop/cart.html', context)
+
+
 def product(request, product_id):
     if request.method == 'POST':
         return create_review(request, product_id)

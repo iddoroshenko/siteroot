@@ -8,6 +8,7 @@
 <p><a href="{% url 'shop_index' %}">Main</a></p>
 {% if request.user.is_authenticated %}
 <p>Welcome, {{ request.user.username }}! <a href="{% url 'logout' %}?next={{ request.path }}">Log out</a></p>
+<p><a href="{% url 'cart' %}">Cart</a></p>
 {% else %}
 <p>Welcome, stranger! Please <a href="{% url 'login' %}?next={{ request.path }}">log in</a>
 or <a href="{% url 'signup' %}">sign up</a></p>
