@@ -99,6 +99,13 @@ def get_cart_list(request):
     return render(request, 'shop/cart.html', context)
 
 
+def delete_from_cart(request, product_id):
+    cart = ShopCart.objects.filter(author=request.user)[0]
+    cart.products.remove(product_id)
+    cart.save()
+    return get_cart_list(request)
+
+
 def product(request, product_id):
     if request.method == 'POST':
         return create_review(request, product_id)
@@ -117,6 +124,73 @@ def render_product(request, product_id, additional_context={}):
                }
 
     return render(request, 'shop/product.html', context)
+
+
+def change_review(request, review_id):
+    if request.method == 'GET':
+        review = get_object_or_404(Review, id=review_id)
+        city = review.city
+        textPositive = review.textPositive
+        textNegative = review.textNegative
+        textSummary = review.textSummary
+        rating = review.rating
+        ratingForm = RatingForm()
+        context = {'ratingForm': ratingForm,
+                   'city': city,
+                   'textPositive': textPositive,
+                   'textNegative': textNegative,
+                   'textSummary': textSummary,
+                   'rating': rating,
+                   'review': review,
+                   }
+        return render(request, 'shop/review_change.html', context)
+    else:
+        review = get_object_or_404(Review, id=review_id)
+        city = request.POST['city']
+        city_error = None
+        if not city or city.isspace():
+            city_error = 'Please provide city'
+
+        textPositive = request.POST['textPositive']
+        textPositive_error = None
+        if not textPositive or textPositive.isspace():
+            textPositive_error = 'Please provide textPositive'
+
+        textNegative = request.POST['textNegative']
+        textNegative_error = None
+        if not textNegative or textNegative.isspace():
+            textNegative_error = 'Please provide textNegative'
+
+        textSummary = request.POST['textSummary']
+        textSummary_error = None
+        if not textSummary or textSummary.isspace():
+            textSummary_error = 'Please provide textSummary'
+
+        ratingForm = RatingForm(request.POST)
+        rating = 0
+        if ratingForm.is_valid():
+            rating = ratingForm.cleaned_data['rating']
+
+        if textNegative_error or textPositive_error or textSummary_error or city_error:
+            error_context = {
+                'textPositive_error': textPositive_error,
+                'textPositive': textPositive,
+                'textNegative_error': textNegative_error,
+                'textNegative': textNegative,
+                'textSummary_error': textSummary_error,
+                'textSummary': textSummary,
+                'city_error': city_error,
+                'city': city,
+            }
+            return render(request, 'shop/review_change.html', error_context)
+        else:
+            review.city = city
+            review.textSummary = textSummary
+            review.textNegative = textNegative
+            review.textPositive = textPositive
+            review.rating = rating
+            review.save()
+            return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': review.product.id}))
 
 
 @login_required(login_url='/shop/login')
@@ -163,7 +237,7 @@ def create_review(request, product_id):
         }
         return render_product(request, product_id, error_context)
     else:
-        Review(product_id=product.id, textPositive=textPositive,
+        Review(product_id=product.id, author=request.user, textPositive=textPositive,
                textNegative=textNegative, textSummary=textSummary, username=username,
                city=city, rating=rating, reviewLikes=0, reviewDislikes=0).save()
         return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))
@@ -203,4 +277,12 @@ def addProductToCart(request, product_id):
     if product_id not in cart.products:
         cart.products.append(product_id)
         cart.save()
+    return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))
+
+
+def remove_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+    product_id = review.product.id
+    review = Review.objects.get(id=review_id)
+    review.delete()
     return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))

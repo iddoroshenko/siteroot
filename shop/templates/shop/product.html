@@ -7,6 +7,7 @@
 <p>Description: {{ product.description }}</p>
 <p>Price: {{ product.price }}</p>
 {% if request.user.is_authenticated %}
+<p><a href="{% url 'addProductToCart' product.id %}">Add product to cart</a></p>
 <form action="{% url 'product_by_id' product.id %}" method="POST">
     {% csrf_token %}
     <input type="text" name="city" maxlength="40" size="40" placeholder="enter your city" value="{{ city }}"/>
@@ -36,16 +37,22 @@
     </form>
 </form>
 {% else %}
-<h3>Log in if you want to leave a review</h3>
+<h3>Log in if you want to leave a review or buy a product</h3>
 {% endif %}
-<a href="{% url 'addProductToCart' product.id %}">Add product to cart</a>
 <ul>
     {% for review in reviews %}
         <li>
+            {% if request.user.id == review.author.id %}
+            <p><a href="{% url 'change_review' review.id %}">change review</a></p>
+            <form action="{% url 'remove_review' review.id %}" method="POST">
+                {% csrf_token %}
+            <input type="submit" value="remove review"/>
+            </form>
+            {% endif %}
             Username: <b>{{ review.username }}</b><br/>
             City: <i>{{ review.city }}</i><br/>
             Date: <i>{{ review.created_at }}</i><br/>
-            {% if   review.created_at.year != review.updated_at.year or review.created_at.month != review.updated_at.month or review.created_at.day != review.updated_at.day or review.created_at.hour != review.updated_at.hour %}
+            {% if   review.created_at.year != review.updated_at.year or review.created_at.month != review.updated_at.month or review.created_at.day != review.updated_at.day or review.created_at.hour != review.updated_at.hour or review.created_at.minute != review.updated_at.minute%}
             Changed: <i>{{ review.updated_at }}</i><br/>
             {% endif %}
             Positive: <p>{{ review.textPositive }}</p><br/>

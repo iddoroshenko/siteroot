@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="{% url 'change_review' review.id %}" method="POST">
+    {% csrf_token %}
+    <input type="text" name="city" maxlength="40" size="40" placeholder="enter your city" value="{{ city }}"/>
+    <br/>
+    {% if city_error %}
+    <p style="color:#ff0000;"> {{ city_error }}</p>
+    {% endif %}
+    <textarea name="textPositive" maxlength="4096" rows="10" cols="80" placeholder="textPositive here">{{ textPositive }}</textarea>
+    <br/>
+    {% if textPositive_error %}
+    <p style="color:#ff0000;"> {{ textPositive_error }}</p>
+    {% endif %}
+    <textarea name="textNegative" maxlength="4096" rows="10" cols="80" placeholder="textNegative here">{{ textNegative }}</textarea>
+    <br/>
+    {% if textNegative_error %}
+    <p style="color:#ff0000;"> {{ textNegative_error }}</p>
+    {% endif %}
+    <textarea name="textSummary" maxlength="4096" rows="10" cols="80" placeholder="textSummary here">{{ textSummary }}</textarea>
+    <br/>
+    {% if textSummary_error %}
+    <p style="color:#ff0000;"> {{ textSummary_error }}</p>
+    {% endif %}
+    <form method="POST">
+    {% csrf_token %}
+    <table>{{ ratingForm }}</table>
+    <input type="submit" value="send review"/>
+    </form>
+</form>
+</body>
+</html>
