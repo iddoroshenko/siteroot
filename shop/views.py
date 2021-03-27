@@ -64,8 +64,15 @@ def get_products_list(request):
         name = request.user.username
     else:
         name = "stranger"
+    if request.method == 'GET':
+        products = Product.objects.order_by('title')
+    else:
+        search_line = request.POST['search_line']
+        if not search_line or search_line.isspace():
+            products = Product.objects.order_by('title')
+        else:
+            products = Product.objects.filter(title__contains=search_line).order_by('title')
 
-    products = Product.objects.order_by('title')
     context = {'products': products,
                'username': name,
                }
