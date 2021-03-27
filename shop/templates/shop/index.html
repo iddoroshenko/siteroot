@@ -5,12 +5,11 @@
         {% csrf_token %}
         <input type="text" name="search_line" maxlength="40" size="40" placeholder="search" value="{{ search_line }}"/>
         <br/>
-        <input type="submit" value="Search"/>
-    </form>
-    <form method="POST">
-        {% csrf_token %}
-        <table>{{ sortForm }}</table>
-        <input type="submit" value="sort"/>
+        <form method="POST">
+            {% csrf_token %}
+            <table>{{ sortForm }}</table>
+            <input type="submit" value="Search"/>
+        </form>
     </form>
     <ul>
         {% for product in products %}

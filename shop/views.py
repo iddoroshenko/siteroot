@@ -66,6 +66,8 @@ def get_products_list(request):
         name = "stranger"
     if request.method == 'GET':
         products = Product.objects.order_by('title')
+        sort = '1'
+        search_line = ''
     else:
         search_line = ''
         if 'search_line' in request.POST:
@@ -73,7 +75,7 @@ def get_products_list(request):
         sortForm = MainPageSortForm(request.POST)
         sort = 0
         if sortForm.is_valid():
-            sort = sortForm.cleaned_data['choices']
+            sort = sortForm.cleaned_data['sort_by']
         if not search_line or search_line.isspace():
             products = Product.objects.order_by('title')
         else:
@@ -82,9 +84,11 @@ def get_products_list(request):
             products = products.order_by('-averageRating')
 
     sortForm = MainPageSortForm()
+    sortForm.fields['sort_by'].initial = sort
     context = {'products': products,
                'username': name,
                'sortForm': sortForm,
+               'search_line': search_line
                }
     return render(request, 'shop/index.html', context)
 

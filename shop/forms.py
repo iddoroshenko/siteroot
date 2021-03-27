@@ -23,4 +23,4 @@ class RatingForm(forms.Form):
 
 
 class MainPageSortForm(forms.Form):
-    choices = forms.ChoiceField(widget=forms.RadioSelect, choices=[('1', 'by title'), ('2', 'by rating')])
+    sort_by = forms.ChoiceField(widget=forms.RadioSelect, choices=[('1', 'title'), ('2', 'rating')], initial='1')
