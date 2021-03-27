@@ -8,7 +8,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from .models import Product, Review, ReviewComment, ShopCart
+from .models import Product, Review, ReviewComment, ShopCart,Sentiment
 from .forms import LoginForm, RegistrationForm, RatingForm
 
 
@@ -24,7 +24,7 @@ def log_in(request):
                 login(request, user)
                 return redirect(request.GET['next'])
             else:
-                form.add_error('Invalid credentials!')
+                form.add_error('username', 'Invalid credentials!')
     else:
         form = LoginForm()
     return render(request, 'shop/login.html', {'form': form})
@@ -82,20 +82,19 @@ def get_products_list(request):
 def get_cart_list(request):
     if request.user.is_authenticated:
         name = request.user.username
+        cart = ShopCart.objects.filter(author=request.user)[0]
+
+        products = Product.objects.order_by('title')
+        productsInCart = []
+        for product in products:
+            if product.id in cart.products:
+                productsInCart.append(product)
+
+        context = {'products': productsInCart,
+                   'username': name,
+                   }
     else:
-        name = "stranger"
-
-    cart = ShopCart.objects.filter(author=request.user)[0]
-
-    products = Product.objects.order_by('title')
-    productsInCart = []
-    for product in products:
-        if product.id in cart.products:
-            productsInCart.append(product)
-
-    context = {'products': productsInCart,
-               'username': name,
-               }
+        context = {}
     return render(request, 'shop/cart.html', context)
 
 
@@ -190,6 +189,7 @@ def change_review(request, review_id):
             review.textPositive = textPositive
             review.rating = rating
             review.save()
+            updateAverageRating(review.product.id)
             return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': review.product.id}))
 
 
@@ -240,6 +240,7 @@ def create_review(request, product_id):
         Review(product_id=product.id, author=request.user, textPositive=textPositive,
                textNegative=textNegative, textSummary=textSummary, username=username,
                city=city, rating=rating, reviewLikes=0, reviewDislikes=0).save()
+        updateAverageRating(product_id)
         return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))
 
 
@@ -285,4 +286,18 @@ def remove_review(request, review_id):
     product_id = review.product.id
     review = Review.objects.get(id=review_id)
     review.delete()
+    updateAverageRating(product_id)
     return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))
+
+
+def updateAverageRating(product_id):
+    product = get_object_or_404(Product, id=product_id)
+    reviews = Review.objects.filter(product=product)
+    sum = 0
+    for review in reviews:
+        sum += int(review.rating)
+    if len(reviews) == 0:
+        product.averageRating = -1
+    else:
+        product.averageRating = round(sum / len(reviews), 2)
+    product.save()

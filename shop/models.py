@@ -11,6 +11,8 @@ class Product(Model):
     description = CharField(max_length=4096)
     price = IntegerField('price of product')
 
+    averageRating = FloatField('average rating', default=-1)
+
     def __str__(self):
         return str(self.title)
 
@@ -57,3 +59,9 @@ class ReviewComment(Model):
 class ShopCart(Model):
     author = ForeignKey(User, on_delete=CASCADE, default=1)
     products = ArrayField(models.IntegerField(), blank=True)
+
+
+class Sentiment(Model):
+    author = ForeignKey(User, on_delete=CASCADE)
+    review = ForeignKey(Review, on_delete=CASCADE)
+    vote = IntegerField('like = 1; dislike = -1', default=0)
