@@ -1,6 +1,9 @@
 {% extends 'shop/base.html' %}
 {% block content %}
 {% if request.user.is_authenticated %}
+{% if not products %}
+<p>Your cart is empty</p>
+{% endif %}
 <h2>
     <ul>
         {% for product in products %}

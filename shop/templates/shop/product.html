@@ -16,17 +16,17 @@
     {% if city_error %}
     <p style="color:#ff0000;"> {{ city_error }}</p>
     {% endif %}
-    <textarea name="textPositive" maxlength="4096" rows="10" cols="80" placeholder="textPositive here">{{ textPositive }}</textarea>
+    <textarea name="textPositive" maxlength="4096" rows="10" cols="80" placeholder="enter the advantages of the product">{{ textPositive }}</textarea>
     <br/>
     {% if textPositive_error %}
     <p style="color:#ff0000;"> {{ textPositive_error }}</p>
     {% endif %}
-    <textarea name="textNegative" maxlength="4096" rows="10" cols="80" placeholder="textNegative here">{{ textNegative }}</textarea>
+    <textarea name="textNegative" maxlength="4096" rows="10" cols="80" placeholder="enter the disadvantages of the product">{{ textNegative }}</textarea>
     <br/>
     {% if textNegative_error %}
     <p style="color:#ff0000;"> {{ textNegative_error }}</p>
     {% endif %}
-    <textarea name="textSummary" maxlength="4096" rows="10" cols="80" placeholder="textSummary here">{{ textSummary }}</textarea>
+    <textarea name="textSummary" maxlength="4096" rows="10" cols="80" placeholder="describe the product in general">{{ textSummary }}</textarea>
     <br/>
     {% if textSummary_error %}
     <p style="color:#ff0000;"> {{ textSummary_error }}</p>
@@ -61,18 +61,32 @@
             Summary: <p>{{ review.textSummary }}</p><br/>
             Score: <b>{{ review.rating }}</b><br/>
             Review likes: <b>{{ review.reviewLikes }}</b><br/>
-            Review dislikes: <b>{{ review.reviewDislikes }}</b>
+            Review dislikes: <b>{{ review.reviewDislikes }}</b><br/>
+            <form style="display:inline;" action="{% url 'like' review.id %}" method="POST">
+                {% csrf_token %}
+            <input type="submit" value="like"/>
+            </form>
+            <form style="display:inline;" action="{% url 'dislike' review.id %}" method="POST">
+                {% csrf_token %}
+            <input type="submit" value="dislike"/>
+            </form>
+            <p>Comments:</p>
             <ul>
                 {% for comment in reviewComments %}
                 {% if comment.review.id == review.id %}
                 <li>
                     Username: <b>{{ comment.username }}</b><br/>
                     Comment: <p>{{ comment.text }}</p>
+                    {% if request.user.id == comment.author.id %}
+                    <form action="{% url 'remove_comment' comment.id %}" method="POST">
+                        {% csrf_token %}
+                        <input type="submit" value="remove comment"/>
+                    </form>
+                    {% endif %}
                 </li>
                 {% endif %}
                 {% endfor %}
-            </ul>
-
+            </ul></br>
             {% if request.user.is_authenticated %}
             <form action="{% url 'reviewComment' review.id %}" method="POST">
                 {% csrf_token %}

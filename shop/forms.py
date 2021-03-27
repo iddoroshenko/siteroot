@@ -20,3 +20,7 @@ class RatingForm(forms.Form):
                                 ('3', 'average'),
                                 ('4', 'good'),
                                 ('5', 'perfect')])
+
+
+class MainPageSortForm(forms.Form):
+    choices = forms.ChoiceField(widget=forms.RadioSelect, choices=[('1', 'by title'), ('2', 'by rating')])

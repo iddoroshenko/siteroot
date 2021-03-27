@@ -8,8 +8,8 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from .models import Product, Review, ReviewComment, ShopCart,Sentiment
-from .forms import LoginForm, RegistrationForm, RatingForm
+from .models import Product, Review, ReviewComment, ShopCart, Sentiment
+from .forms import LoginForm, RegistrationForm, RatingForm, MainPageSortForm
 
 
 def log_in(request):
@@ -67,14 +67,24 @@ def get_products_list(request):
     if request.method == 'GET':
         products = Product.objects.order_by('title')
     else:
-        search_line = request.POST['search_line']
+        search_line = ''
+        if 'search_line' in request.POST:
+            search_line = request.POST['search_line']
+        sortForm = MainPageSortForm(request.POST)
+        sort = 0
+        if sortForm.is_valid():
+            sort = sortForm.cleaned_data['choices']
         if not search_line or search_line.isspace():
             products = Product.objects.order_by('title')
         else:
             products = Product.objects.filter(title__contains=search_line).order_by('title')
+        if int(sort) == 2:
+            products = products.order_by('-averageRating')
 
+    sortForm = MainPageSortForm()
     context = {'products': products,
                'username': name,
+               'sortForm': sortForm,
                }
     return render(request, 'shop/index.html', context)
 
@@ -268,7 +278,7 @@ def create_review_comment(request, review_id):
         }
         return render_product(request, review.product.id, error_context)
     else:
-        ReviewComment(review_id=review.id, product_id=review.product.id, text=text, username=username).save()
+        ReviewComment(review_id=review.id, author=request.user, product_id=review.product.id, text=text, username=username).save()
         return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': review.product.id}))
 
 
@@ -290,6 +300,14 @@ def remove_review(request, review_id):
     return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))
 
 
+def remove_comment(request, comment_id):
+    comment = get_object_or_404(ReviewComment, id=comment_id)
+    product_id = comment.product.id
+    comment = ReviewComment.objects.get(id=comment_id)
+    comment.delete()
+    return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': product_id}))
+
+
 def updateAverageRating(product_id):
     product = get_object_or_404(Product, id=product_id)
     reviews = Review.objects.filter(product=product)
@@ -301,3 +319,48 @@ def updateAverageRating(product_id):
     else:
         product.averageRating = round(sum / len(reviews), 2)
     product.save()
+
+
+def like(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+    new_like, created = Sentiment.objects.get_or_create(author=request.user, review_id=review_id)
+    if created:
+        review.reviewLikes += 1
+        review.save()
+        new_like.vote = 1
+        new_like.save()
+    else:
+        if new_like.vote == -1:
+            review.reviewDislikes -= 1
+            review.reviewLikes += 1
+            review.save()
+            new_like.vote = 1
+            new_like.save()
+        elif new_like.vote == 1:
+            review.reviewLikes -= 1
+            review.save()
+            new_like.delete()
+
+    return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': review.product.id}))
+
+
+def dislike(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+    new_dislike, created = Sentiment.objects.get_or_create(author=request.user, review_id=review_id)
+    if created:
+        review.reviewDislikes += 1
+        review.save()
+        new_dislike.vote = -1
+        new_dislike.save()
+    else:
+        if new_dislike.vote == 1:
+            review.reviewLikes -= 1
+            review.reviewDislikes += 1
+            new_dislike.vote = -1
+            new_dislike.save()
+            review.save()
+        elif new_dislike.vote == -1:
+            review.reviewDislikes -= 1
+            new_dislike.delete()
+            review.save()
+    return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': review.product.id}))
