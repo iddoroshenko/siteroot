@@ -325,6 +325,7 @@ def updateAverageRating(product_id):
     product.save()
 
 
+@login_required(login_url='/shop/login')
 def like(request, review_id):
     review = get_object_or_404(Review, id=review_id)
     new_like, created = Sentiment.objects.get_or_create(author=request.user, review_id=review_id)
@@ -348,6 +349,7 @@ def like(request, review_id):
     return HttpResponseRedirect(reverse('product_by_id', kwargs={'product_id': review.product.id}))
 
 
+@login_required(login_url='/shop/login')
 def dislike(request, review_id):
     review = get_object_or_404(Review, id=review_id)
     new_dislike, created = Sentiment.objects.get_or_create(author=request.user, review_id=review_id)
