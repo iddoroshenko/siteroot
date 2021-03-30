@@ -100,12 +100,15 @@ def get_cart_list(request):
 
         products = Product.objects.order_by('title')
         productsInCart = []
+        cost = 0
         for product in products:
             if product.id in cart.products:
                 productsInCart.append(product)
+                cost += int(product.price)
 
         context = {'products': productsInCart,
                    'username': name,
+                   'cost': cost
                    }
     else:
         context = {}
